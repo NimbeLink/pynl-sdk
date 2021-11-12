@@ -15,9 +15,6 @@ import typing
 
 import nimbelink.command as command
 import nimbelink.config as config
-
-command.WestCommand.setupImports(__file__, "../")
-
 import nimbelink.sdk.commands.app as app
 import nimbelink.sdk.commands.device as device
 
