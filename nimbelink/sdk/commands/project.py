@@ -55,6 +55,7 @@ class ProjectCommand(command.Command):
         class Map:
             """A map from a resource to an argparse command
             """
+
             def __init__(
                 self,
                 name: str,
