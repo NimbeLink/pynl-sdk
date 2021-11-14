@@ -173,8 +173,3 @@ class NanoCommand(command.WestCommand):
                 device.DeviceCommand()
             ]
         )
-
-__commands__ = [
-    NanoCommand()
-]
-"""Our package's commands"""
