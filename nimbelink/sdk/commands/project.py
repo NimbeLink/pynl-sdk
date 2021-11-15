@@ -344,20 +344,6 @@ class ProjectCommand(command.Command):
             Command arguments set up
         """
 
-        # If no project names were specified, try to find them
-        if args.projects is None:
-            args.projects = sdk.Project.getNames()
-
-        # If we should have only had a single project but multiple were
-        # specified, that's a paddlin'
-        if self._singleProject and (len(args.projects) > 1):
-            self.stdout.error("Must have a unique project for this:")
-
-            for project in args.projects:
-                self.stdout.error(f"    {project}")
-
-            return 1
-
         kwargs = {}
 
         # If they specified the root directory, note it
@@ -380,26 +366,52 @@ class ProjectCommand(command.Command):
 
                 return 1
 
-        # If only some project resources were provided manually but we found multiple
-        # projects, we won't be able to fill unique profiles for each project
+        # Make it easier to look at our project list in the event it wasn't
+        # specified
+        if args.projects is None:
+            args.projects = []
+
+        # If we have all of the things we need for the command, we won't need a
+        # project
+        if len(kwargs) == len(self._resources):
+            # If they specified a project, complain about it but still keep
+            # doing
+            if (len(args.projects) > 0):
+                self.stdout.warning("All resources specified already, ignoring the provided project")
+
+            # Use a single anonymous project
+            args.projects = [None]
+
+        # Else, we're missing resources, so if no project was specified we'll
+        # have to try to use configured projects to auto-find them
+        elif len(args.projects) < 1:
+            args.projects = sdk.Project.getNames()
+
+        # If we should have only had a single project but multiple were
+        # specified, that's a paddlin'
+        if self._singleProject and (len(args.projects) > 1):
+            self.stdout.error("Must have a unique project for this command. Choose from:")
+
+            for project in args.projects:
+                self.stdout.error(f"    {project}")
+
+            return 1
+
+        # If only some project resources were provided manually but we found
+        # multiple projects, we won't be able to fill unique profiles for each
+        # project
         #
         # Auto-detection would fill in all project resources, and specifying all
         # needed resources would sufficiently fill out the intended project, but
         # only partially filling out a single project -- and leaving the other
         # dangling -- is not valid.
-        if (len(args.projects) > 1) and (len(kwargs) > 0):
-            if len(kwargs) != len(self._resources):
-                self.stdout.error("Cannot specify subset of arguments when multiple projects present:")
+        if (len(kwargs) > 0) and (len(kwargs) < len(self._resources)) and (len(args.projects) > 1):
+            self.stdout.error("Cannot specify subset of arguments when multiple projects present:")
 
-                for project in args.projects:
-                    self.stdout.error(f"    {project}")
+            for project in args.projects:
+                self.stdout.error(f"    {project}")
 
-                return 1
-
-            # We specified everything found in a 'project' that's needed by our
-            # child command, so there's no reason to carry around valid
-            # projects; just replace them with an anonymous one
-            args.projects = [None]
+            return 1
 
         # Our projects will want their keys combined into a single argument, so
         # if we have any specified, make a total list of them
