@@ -94,6 +94,10 @@ class SignCommand(commands.ProjectCommand):
                 return 1
 
             for output in [project.signedArtifact, project.updateArtifact]:
+                # If this output isn't being generated, skip it
+                if (output is None) or (output.lower() == "none"):
+                    continue
+
                 self.stdout.info(f"Generating '{output}'")
 
                 # Put together our command
